@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('subscription_id')->constrained()->onDelete('cascade');
             $table->datetime('attempted_at');
-            $table->string('result');
+            $table->boolean('succeeded');
+            $table->string('failure_reason')->nullable();
             $table->timestamps();
         });
     }
