@@ -23,4 +23,13 @@ enum SubscriptionStatus: string
     {
         return [self::Active, self::PastDue];
     }
+
+    public static function all(): array
+    {
+        return [
+            self::Active,
+            self::PastDue,
+            self::Suspended,
+        ];
+    }
 }
