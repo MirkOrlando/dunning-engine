@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use App\Contracts\PaymentGatewayInterface;
 
-class processSubscriptionsPaymentJob implements ShouldQueue
+class ProcessSubscriptionsPaymentJob implements ShouldQueue
 {
     use Queueable;
 
