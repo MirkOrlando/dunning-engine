@@ -7,6 +7,7 @@ use App\Models\Subscription;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use App\Contracts\PaymentGatewayInterface;
+use Illuminate\Support\Facades\DB;
 
 class ProcessSubscriptionsPaymentJob implements ShouldQueue
 {
@@ -38,35 +39,36 @@ class ProcessSubscriptionsPaymentJob implements ShouldQueue
                 foreach ($subscriptions as $subscription) {
                     // process the payment
                     $paymentResult = $this->gateway->attempt($subscription);
-
-                    // create a payment record
-                    $payment = $subscription->payments()->create([
-                        'attempted_at' => now(),
-                        'succeeded' => $paymentResult->succeeded,
-                        'failure_reason' => optional($paymentResult->failureReason)->value ?? null,
-                    ]);
-
-                    if ($payment->succeeded) {
-                        $subscription->update([
-                            'status' => SubscriptionStatus::Active,
-                            'failed_attempt_count' => 0,
-                            'next_payment_due_at' => now()->addMonth(),
+                        DB::transaction(function () use ($subscription, $paymentResult) {
+                        $payment = $subscription->payments()->create([
+                            'attempted_at' => now(),
+                            'succeeded' => $paymentResult->succeeded,
+                            'failure_reason' => optional($paymentResult->failureReason)->value ?? null,
                         ]);
-                    } else {
-                        if ($subscription->failed_attempt_count < config('subscription.grace_period.attempts', 5)) {
+
+                        if ($payment->succeeded) {
                             $subscription->update([
-                                'status' => SubscriptionStatus::PastDue,
-                                'failed_attempt_count' => $subscription->failed_attempt_count++,
-                                'next_payment_due_at' => now()->addDays(config('subscription.grace_period.days_interval', 3)),
+                                'status' => SubscriptionStatus::Active,
+                                'failed_attempt_count' => 0,
+                                'next_payment_due_at' => now()->addMonth(),
                             ]);
                         } else {
-                            $subscription->update([
-                                'status' => SubscriptionStatus::Suspended,
-                                'failed_attempt_count' => $subscription->failed_attempt_count++,
-                                'next_payment_due_at' => null,
-                            ]);
+                            $newCount = $subscription->failed_attempt_count + 1;
+                            $maxAttempts = config('subscription.grace_period.attempts', 5);
+
+                            if ($newCount < $maxAttempts) {
+                                $subscription->increment('failed_attempt_count', 1, [
+                                    'status' => SubscriptionStatus::PastDue,
+                                    'next_payment_due_at' => now()->addDays(config('subscription.grace_period.days_interval', 3)),
+                                ]);
+                            } else {
+                                $subscription->increment('failed_attempt_count', 1, [
+                                    'status' => SubscriptionStatus::Suspended,
+                                    'next_payment_due_at' => null,
+                                ]);
+                            }
                         }
-                    }
+                    });
                 }
             });
     }
