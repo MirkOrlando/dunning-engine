@@ -18,7 +18,7 @@ class PlanFactory extends Factory
     public function definition(): array
     {
         return [
-            'code' => fake()->unique()->code(),
+            'code' => fake()->unique()->bothify('PLAN-????'),
             'name' => fake()->word(),
             'price' => fake()->randomFloat(2, 0, 99.99),
         ];
