@@ -18,7 +18,7 @@ class Subscription extends Model
 
     protected $casts = [
         'next_payment_due_at' => 'datetime',
-        'failed_attempt_count' => 'integer',
+        'failed_attempts_count' => 'integer',
         'status' => SubscriptionStatus::class,
     ];
 

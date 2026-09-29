@@ -27,7 +27,7 @@ class SubscriptionFactory extends Factory
             'plan_id' => Plan::factory(),
             'status'=> SubscriptionStatus::Active,
             'next_payment_due_at' => now()->addDays(fake()->numberBetween(1, 30)),
-            'failed_attempt_count' => 0,
+            'failed_attempts_count' => 0,
         ];
     }
 
@@ -36,7 +36,7 @@ class SubscriptionFactory extends Factory
         return $this->state(fn () => [
             'status' => SubscriptionStatus::Active,
             'next_payment_due_at' => now()->addDays(fake()->numberBetween(1, 30)),
-            'failed_attempt_count' => 0,
+            'failed_attempts_count' => 0,
         ])->afterCreating(function (Subscription $subscription) {
             Payment::factory()->succeeded()->for($subscription)->create([
                 'attempted_at' => $subscription->next_payment_due_at->copy()->subMonth(),
@@ -52,9 +52,9 @@ class SubscriptionFactory extends Factory
         return $this->state(fn () => [
             'status' => SubscriptionStatus::PastDue,
             'next_payment_due_at' => now()->addDays(fake()->numberBetween(0, $interval)),
-            'failed_attempt_count' => $failedAttempts ?? fake()->numberBetween(1, $maxAttempts - 1),
+            'failed_attempts_count' => $failedAttempts ?? fake()->numberBetween(1, $maxAttempts - 1),
         ])->afterCreating(
-            fn (Subscription $subscription) => $this->createFailedPayments($subscription, $subscription->failed_attempt_count, $interval)
+            fn (Subscription $subscription) => $this->createFailedPayments($subscription, $subscription->failed_attempts_count, $interval)
         );
     }
 
@@ -66,7 +66,7 @@ class SubscriptionFactory extends Factory
         return $this->state(fn () => [
             'status' => SubscriptionStatus::Suspended,
             'next_payment_due_at' => null,
-            'failed_attempt_count' => $maxAttempts,
+            'failed_attempts_count' => $maxAttempts,
         ])->afterCreating(
             fn (Subscription $subscription) => $this->createFailedPayments($subscription, $maxAttempts, $interval, from: now())
         );
