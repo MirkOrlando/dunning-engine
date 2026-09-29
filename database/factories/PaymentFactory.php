@@ -20,7 +20,6 @@ class PaymentFactory extends Factory
     {
         return [
             'attempted_at' => fake()->dateTimeBetween('-1 month', 'now'),
-            'failure_reason' => fake()->randomElement(PaymentFailureReason::all()),
         ];
     }
 

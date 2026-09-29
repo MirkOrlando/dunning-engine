@@ -7,6 +7,9 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schedule;
+use App\Jobs\ProcessSubscriptionsPaymentJob;
+use App\Contracts\PaymentGatewayInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -27,4 +30,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+    })->withSchedule(function (Schedule $schedule) {
+        $schedule->job(new ProcessSubscriptionsPaymentJob(app(PaymentGatewayInterface::class)))->daily()->at('00:00');
     })->create();

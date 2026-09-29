@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->foreignId('plan_id')->constrained()->onDelete('cascade');
             $table->string('status');
-            $table->datetime('next_payment_due_at');
+            $table->datetime('next_payment_due_at')->nullable();
             $table->integer('failed_attempts_count')->default(0);
             $table->timestamps();
         });
