@@ -2,11 +2,13 @@
 
 namespace App\ValueObjects;
 
+use App\Enums\PaymentFailureReason;
+
 final readonly class PaymentResult
 {
     private function __construct(
         public bool $succeeded,
-        public ?string $failureReason = null,
+        public ?PaymentFailureReason $failureReason = null,
     ) {}
 
     public static function success(): self
@@ -14,7 +16,7 @@ final readonly class PaymentResult
         return new self(succeeded: true);
     }
 
-    public static function failure(string $reason): self
+    public static function failure(PaymentFailureReason $reason): self
     {
         return new self(succeeded: false, failureReason: $reason);
     }
